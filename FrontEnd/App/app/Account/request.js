@@ -1,8 +1,27 @@
 import User from "./User.js" // Singular naming
+import { getAccessToken } from "../../TokensStorage/storeTokens.js";
+
+export async function userInfo() {
+  try{
+    const token = await getAccessToken();
+    console.log("Token being sent:", token);
+    const res = await fetch("http://10.0.2.2:5000/users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    })
+    const data = await res.json();
+    console.log("Response Get user", data);
+    return data;
+  }catch(error){
+    console.error("Request error: ", error);
+  }
+}
 
 export async function checkPhonenumber(phone) {
   try {
-    console.log("Sending request to check phone:", phone);
     
     const res = await fetch("http://10.0.2.2:5000/users/phone", {
       method: "POST",

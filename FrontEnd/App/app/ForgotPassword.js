@@ -212,8 +212,7 @@ export default function ForgotPassword() {
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
-            onFocus={() => setPhoneFocused(true)}
-            onBlur={() => setPhoneFocused(false)}
+            
             style={getInputStyle(phoneFocused, phone.length > 0)}
             editable={!isDisabled}
           />
@@ -226,8 +225,7 @@ export default function ForgotPassword() {
             keyboardType="number-pad"
             value={otp}
             onChangeText={setOtp}
-            onFocus={() => setOtpFocused(true)}
-            onBlur={() => setOtpFocused(false)}
+           
             style={getInputStyle(otpFocused, otp.length > 0)}
             editable={!isDisabled}
           />
@@ -241,8 +239,7 @@ export default function ForgotPassword() {
               secureTextEntry
               value={newPassword}
               onChangeText={setNewPassword}
-              onFocus={() => setNewPasswordFocused(true)}
-              onBlur={() => setNewPasswordFocused(false)}
+              
               style={getInputStyle(newPasswordFocused, newPassword.length > 0)}
               editable={!isDisabled}
             />
@@ -252,8 +249,7 @@ export default function ForgotPassword() {
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              onFocus={() => setConfirmPasswordFocused(true)}
-              onBlur={() => setConfirmPasswordFocused(false)}
+              
               style={getInputStyle(confirmPasswordFocused, confirmPassword.length > 0)}
               editable={!isDisabled}
             />

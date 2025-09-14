@@ -47,5 +47,5 @@ export async function doSignup(phone, password, username, profileImageData = nul
   await saveAccessToken(result.tokens.accessTokens, result.tokens.expiratoinIn);
   await saveRefreshToken(result.tokens.refreshTokens);
 
-  return { success: true, message: "Signup completed!", name: result.user.name ,picUrl: result.proImage };
+  return { success: true, message: "Signup completed!", name: result.user.name ,picUrl: result.proImage, userId: result.user.id };
 }

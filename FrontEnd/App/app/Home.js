@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useContext } from 'react';
+import React, { useRef, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import AutoDetection from './AutoDetection';
 import FileDetection from './FileDetection';
 import LinkDetection from './LinkDetection';
 import PremiumPlans from './Advertise';
-import { UserContext } from './UserStorage/profilePic';
+import { usersInfo } from './userInfo';
 
 // Screen dimensions for scaling
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -33,60 +33,33 @@ const moderateScale = (size, factor = 0.5) =>
   size + (scale(size) - size) * factor;
 
 export default function Home() {
+  const [user, setUser] = useState({
+    name: "",
+    phone_number: "",
+    pic_url: "",
+  });
+
+  async function loadUser() {
+    const user = await usersInfo(); // await the async function
+    // console.log("User name:", user.name);
+    // console.log("User phone:", user.phone_number);
+    // console.log("User pic:", user.pic_url);
+    setUser(user);
+  }
   const searchInputRef = useRef(null);
   const { focusSearch, timestamp } = useLocalSearchParams(); 
-  
-  // Safely access UserContext with fallback
-  const contextValue = useContext(UserContext);
-  const { user, saveUser } = contextValue || { user: null, saveUser: () => {} };
 
   // Default profile data
-  const defaultProfileImage = require('../assets/images/profile.png');
-  const defaultName = "Guest";
-
-  // Check if user is logged in (has essential user data)
-  const isUserLoggedIn = user && (user.email || user.id || user.username);
-
-  // Determine profile image and name based on login status
-  const getProfileImage = () => {
-    if (isUserLoggedIn && user.picUrl) {
-      console.log("Image Available");
-      return { uri: user.picUrl };
-    }else{
-      console.log("Image is not available!");
-    }
-    return defaultProfileImage;
-  };
-
-  const getUserName = () => {
-    if (isUserLoggedIn && user.name) {
-      return user.name;
-    }
-    return defaultName;
-  };
+  const defaultProfileImage = user.pic_url;
+  const defaultName = user.name;
 
   // local state for profile image
-  const [profileImage, setProfileImage] = useState(getProfileImage());
+  const [profileImage, setProfileImage] = useState(defaultProfileImage);
   const [showAd, setShowAd] = useState(false);
   const [adDismissed, setAdDismissed] = useState(false);
 
-  // sync context user updates
-  useEffect(() => {
-    setProfileImage(getProfileImage());
-  }, [user]);
-
-  // Function to pick image - only allow if user is logged in
+  // Function to pick image
   const pickImage = async () => {
-    // Check if user is logged in before allowing image change
-    if (!isUserLoggedIn) {
-      Alert.alert(
-        'Login Required', 
-        'Please sign up or login to change your profile picture.',
-        [{ text: 'OK', style: 'default' }]
-      );
-      return;
-    }
-
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission Required', 'We need access to your gallery to change the profile picture.');
@@ -103,24 +76,11 @@ export default function Home() {
     if (!result.canceled) {
       const newImage = { uri: result.assets[0].uri };
       setProfileImage(newImage);
-
-      // persist in context (updates AsyncStorage)
-      const updatedUser = { ...user, picUrl: newImage.uri };
-      saveUser(updatedUser);
     }
   };
 
-  // Show alert before picking - different message based on login status
+  // Show alert before picking image
   const showPickAlert = () => {
-    if (!isUserLoggedIn) {
-      Alert.alert(
-        'Login Required',
-        'Please sign up or login to customize your profile picture.',
-        [{ text: 'OK', style: 'default' }]
-      );
-      return;
-    }
-
     Alert.alert(
       'Change Profile Picture',
       'Do you want to choose a new profile picture?',
@@ -131,6 +91,10 @@ export default function Home() {
       { cancelable: true }
     );
   };
+
+  useEffect(() => {
+    loadUser();
+  }, []);
 
   // Autofocus search
   useEffect(() => {
@@ -191,7 +155,7 @@ export default function Home() {
       <View
         style={{
           position: 'absolute',
-          top: verticalScale(90),
+          top: verticalScale(110),
           left: scale(40),
           flexDirection: 'row',
           alignItems: 'center',
@@ -199,30 +163,29 @@ export default function Home() {
       >
         <TouchableOpacity onPress={showPickAlert}>
           <Image
-            source={profileImage}
+            source={{ uri: defaultProfileImage }}
             style={{
               width: scale(150),
               height: scale(150),
               borderRadius: scale(75),
               borderWidth: 3,
-              borderColor: isUserLoggedIn ? "#fff" : "#ccc", // Different border for guest
-              opacity: isUserLoggedIn ? 1 : 0.8, // Slightly transparent for guest
+              borderColor: "#fff",
             }}
           />
         </TouchableOpacity>
-        <View style={{ marginLeft: 20, top: -5 }}>
+        <View style={{ marginLeft: 15, top: -3 }}>
           <Text style={{ 
-            color: isUserLoggedIn ? '#fff' : '#ddd', // Slightly dimmed for guest
-            fontSize: moderateScale(30) 
+            color: '#fff',
+            fontSize: moderateScale(25) 
           }}>
-            Hello, {getUserName()}!
+            Hello, {defaultName}!
           </Text>
           <Text style={{ 
             top: 5, 
             color: '#ccc', 
-            fontSize: moderateScale(20) 
+            fontSize: moderateScale(15) 
           }}>
-            {isUserLoggedIn ? 'Welcome to KHAAROT' : 'Please login to personalize'}
+            Welcome to KHAAROT
           </Text>
         </View>
       </View>

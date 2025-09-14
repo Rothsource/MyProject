@@ -1,4 +1,4 @@
-import { userlogin } from './request.js';
+import { userlogin, userInfo } from './request.js';
 import { saveAccessToken, saveRefreshToken } from '../../TokensStorage/storeTokens.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -117,9 +117,10 @@ async function loginFunctions(phone, password) {
   
   // Clear ban data from storage
   await clearBanData();
-
   await saveAccessToken(result.tokens.accessToken, result.tokens.expirationIn);
   await saveRefreshToken(result.tokens.refreshToken);
+
+  userInfo();
 
   return { success: true, userid: result.user.id };
 }

@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
+import { usersInfo, updateUserInfo } from "./userInfo"; // Import updateUserInfo function
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -31,11 +32,54 @@ const MENU_HEIGHT = SCREEN_HEIGHT + 100;
 const MENU_TOP_OFFSET = verticalScale(0);
 
 export default function Menu({ isOpen, toggleDrawer }) {
-  const ImageProfile = require("../assets/images/profile.png");
+
+  const [user, setUser] = useState({
+    name: "",
+    phone_number: "",
+    pic_url: "",
+  });
+
+  async function loadUser() {
+    const user = await usersInfo(); // await the async function
+    // console.log("User name:", user.name);
+    // console.log("User phone:", user.phone_number);
+    // console.log("User pic:", user.pic_url);
+    setUser(user);
+  }
+
+  // Update user info function
+  const updateProfile = async (newName, newPicUrl) => {
+    try {
+      // Call the update function from userInfo
+      await updateUserInfo({ 
+        name: newName || user.name, 
+        pic_url: newPicUrl || user.pic_url 
+      });
+      
+      // Update local state immediately
+      setUser(prevUser => ({
+        ...prevUser,
+        name: newName || prevUser.name,
+        pic_url: newPicUrl || prevUser.pic_url
+      }));
+      
+      console.log("Profile updated successfully");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      Alert.alert("Error", "Failed to update profile");
+    }
+  };
+
+  const ImageProfile = user.pic_url;
   const isPremium = "Normal User";
+  const userName = user.name;
 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isEnglish, setIsEnglish] = useState(true);
+  
+  // Remove these unused states since we're using user state directly
+  // const [profileImage, setProfileImage] = useState(ImageProfile);
+  // const [Name, setName] = useState(userName)
 
   // 🔥 Feedback modal states
   const [showFeedback, setShowFeedback] = useState(false);
@@ -100,7 +144,14 @@ export default function Menu({ isOpen, toggleDrawer }) {
   };
 
   useEffect(() => {
+      loadUser();
+  }, []);
+
+  // Add effect to reload user data when the menu opens (optional - for real-time updates)
+  useEffect(() => {
     if (isOpen) {
+      loadUser(); // Refresh user data when menu opens
+      
       Animated.parallel([
         Animated.timing(drawerAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
         Animated.timing(overlayAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
@@ -207,7 +258,7 @@ export default function Menu({ isOpen, toggleDrawer }) {
           {/* Header */}
           <View style={{ padding: scale(20), alignItems: "center", paddingTop: verticalScale(30) }}>
             <Image
-              source={ImageProfile}
+              source={{uri: user.pic_url}} // Use user.pic_url directly for automatic updates
               style={{
                 width: scale(80),
                 height: scale(80),
@@ -218,7 +269,7 @@ export default function Menu({ isOpen, toggleDrawer }) {
               }}
             />
             <Text style={{ color: "#fff", fontSize: moderateScale(18), fontWeight: "bold", marginTop: verticalScale(15) }}>
-              Joe Doe
+              {user.name} {/* Use user.name directly for automatic updates */}
             </Text>
             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: moderateScale(14), marginTop: verticalScale(5) }}>
               {isPremium}

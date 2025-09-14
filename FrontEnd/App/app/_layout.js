@@ -85,7 +85,7 @@ export default function Layout() {
       </View>
 
       {/* Menu button */}
-      <View style={{ position: "absolute", top: 75, right: 40, zIndex: 6 }}>
+      <View style={{ position: "absolute", top: 100, right: 40, zIndex: 6 }}>
         <IconWithLabel
           source={require("../assets/images/menu.png")}
           size={45}

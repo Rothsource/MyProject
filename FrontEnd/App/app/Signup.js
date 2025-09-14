@@ -21,6 +21,12 @@ import {
   validateUsername,
 } from "./Account/Signup";
 
+if (doSignup.userId){
+  console.log("Available id!");
+}else{
+  console.log("No id");
+}
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const BASE_WIDTH = 1024;
 const BASE_HEIGHT = 1366;

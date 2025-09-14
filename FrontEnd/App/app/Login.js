@@ -11,6 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import loginFunctions from "./Account/Login";
 
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const BASE_WIDTH = 1024;
 const BASE_HEIGHT = 1366;
@@ -19,6 +20,12 @@ const scale = (size) => (SCREEN_WIDTH / BASE_WIDTH) * size;
 const verticalScale = (size) => (SCREEN_HEIGHT / BASE_HEIGHT) * size;
 const moderateScale = (size, factor = 0.5) =>
   size + (scale(size) - size) * factor;
+
+if (loginFunctions.userid){
+  console.log("Available id");
+}else{
+  console.log("No user id!");
+}
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -161,8 +168,7 @@ export default function Login() {
           keyboardType="phone-pad"
           value={phone}
           onChangeText={setPhone}
-          onFocus={() => setPhoneFocused(true)}
-          onBlur={() => setPhoneFocused(false)}
+          
           style={getInputStyle(phoneFocused, phone.length > 0)}
           editable={!loading}
         />
@@ -192,8 +198,7 @@ export default function Login() {
           secureTextEntry
           value={password}
           onChangeText={setPassword}
-          onFocus={() => setPasswordFocused(true)}
-          onBlur={() => setPasswordFocused(false)}
+         
           style={getInputStyle(passwordFocused, password.length > 0)}
           editable={!loading}
         />
