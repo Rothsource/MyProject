@@ -11,12 +11,13 @@ import {
   verifyotp,
   clearOTP,
   checkPhone,
-
 } from "../controller/User.js";
+
+import { verifyToken } from '../Jwt/midware/middleware.js';
 
 const router = express.Router();
 
-router.get("/", getUser);
+router.get("/", verifyToken, getUser);
 
 
 router.post("/signup", PostUsers);
@@ -32,5 +33,6 @@ router.post("/clearOTP", clearOTP)
 router.patch("/password", updatePassword);
 
 router.post("/login", Userlogin);
+
 
 export default router;

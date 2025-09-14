@@ -18,6 +18,8 @@ async function uploadImage(image) {
   }
 }
 
+//ge
+
 // otp generator
 function generateOTP(length = 8) {
   const min = 10 ** (length - 1); 
@@ -42,8 +44,8 @@ export async function writeUsers(name, phone_number, password, salt, picURL) {
 }
 
 // get all users
-export async function readUsers() {
-  return await User.findAll();
+export async function readUserById(id) {
+  return await User.findByPk(id);
 }
 
 // get user by phone number
@@ -56,13 +58,26 @@ export async function readUsersId(phone) {
 // get all users endpoint
 export const getUser = async (req, res) => {
   try {
-    const users = await readUsers();
-    res.json(users);
+    const userId = req.user.sub;   
+    const user = await readUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({
+      user: { 
+        name: user.User_Name, 
+        phone_number: user.User_PhoneNumber, 
+        picUrl: user.pic_url
+      },
+    });
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Failed to fetch users" });
+    console.error("Error fetching user:", error);
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 };
+
 
 // create new user endpoint
 export const checkPhone = async (req, res) => {

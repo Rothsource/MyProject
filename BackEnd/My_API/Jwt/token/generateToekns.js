@@ -9,7 +9,7 @@ export function generateAccessToken(user) {
   }
 
   return jwt.sign(
-    { sub: user.id, name: user.name, phone: user.phone_number }, 
+    { sub: user.sub, name: user.name, phone: user.phone_number }, 
     process.env.JWT_ACCESS_SECRET,                                
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN }            
   );
