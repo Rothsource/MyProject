@@ -1,0 +1,16 @@
+# VSCode settings
+.vscode/
+.env
+
+# Node modules (all)
+**/node_modules/
+
+# Lock files
+**/package-lock.json
+**/yarn.lock
+
+# Dataset folder (optional)
+Backend/TrainML/
+
+
+
