@@ -1,6 +1,6 @@
 import express from "express";
 import userRoutes from "./Router/User.js";
-import Inputlinks from "./Router/DetectHashFile.js";
+import Inputlinks from "./Router/Input.js";
 import store  from "./Router/Store.js";
 import detect from "./Router/Detection.js";
 

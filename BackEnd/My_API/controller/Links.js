@@ -27,11 +27,13 @@ async function record_Detection(link_id, label, user_id, input_id) {
 
 export const createLink = async (req, res) => {
   try {
-    const { links, hash, id } = req.body;
+    const { links, hash } = req.body;
 
     if (!links) {
       return res.status(400).json({ error: 'Input link is required!' });
     }
+
+    const id = req.user.sub;
 
     const newLink = await store_Link(links, hash, id);
 
@@ -48,12 +50,12 @@ export const createLink = async (req, res) => {
 
 export const detectLink = async (req, res) => {
   try {
-    const { hash, userid, inputId } = req.body;
+    const { hash, inputId } = req.body;
 
     if (!hash) {
       return res.status(400).json({ error: 'Hash is required!' });
     }
-
+    const userid = req.user.sub;
     const maliciousLink = await MaliciousLink.findOne({
       where: { hahs_256: hash },
     });

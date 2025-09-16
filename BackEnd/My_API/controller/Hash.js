@@ -1,4 +1,4 @@
-import { HashInput, HashDetection, User, FileMD5, FileSHA1, FileSHA256 } from "../model/Index.js";
+import { HashInput, HashDetection,FileMD5, FileSHA1, FileSHA256 } from "../model/Index.js";
 
 
 async function storeHash(hash, userId, type) {
@@ -37,10 +37,11 @@ async function recordDetection(inputId, label, userId) {
  */
 export const createHash = async (req, res) => {
   try {
-    const { hash, UserId } = req.body;
+    const { hash } = req.body;
+    const UserId = req.user.sub; 
 
     if (!hash || !UserId) return res.status(400).json({ error: "Hash and User ID are required" });
-
+    console.log("Backend", hash);
     let hashType;
     if (hash.length === 32) hashType = "MD5";
     else if (hash.length === 40) hashType = "SHA1";
@@ -61,13 +62,15 @@ export const createHash = async (req, res) => {
  */
 export const detectHash = async (req, res) => {
   try {
-    const { hash, userid, inputid } = req.body;
+    const { hash, inputid } = req.body;
+    const userid = req.user.sub;
 
     if (!hash || !userid || !inputid) {
       return res.status(400).json({ error: "Hash, User ID, and Input ID are required" });
     }
 
     let label = "Good";
+    console.log(`${hash}`);
 
     if (hash.length === 32) {
       const record = await FileMD5.findOne({ where: { md5: hash } });
@@ -79,7 +82,7 @@ export const detectHash = async (req, res) => {
       const record = await FileSHA256.findOne({ where: { sha256: hash } });
       if (record?.is_bad === "Bad") label = "Bad";
     } else {
-      return res.status(400).json({ error: "Invalid hash length" });
+      label = "Not MD5, SHA1, and SHA256";
     }
 
     await recordDetection(inputid, label, userid);

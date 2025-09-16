@@ -6,7 +6,7 @@ import DetectLink from "./Link/DetectLink.js";
 import InputFile from "./File/InputFile.js";
 import FileMD5 from "./File/MD5.js";
 import FileSHA1 from "./File/SHA1.js";
-import FileSHA256 from "./File/MD5.js";
+import FileSHA256 from "./File/SHA256.js";
 import DetectFile from "./File/DetectFile.js";
 import HashDetection from "./Hash/HashDetection.js";
 import HashInput from "./Hash/HashInput.js";
