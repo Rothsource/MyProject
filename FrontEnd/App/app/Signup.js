@@ -155,12 +155,13 @@ export default function Signup() {
   };
 
   return (
+
     <LinearGradient
       colors={["#1E4368", "#1E4368"]}
       style={{
         flex: 1,
         padding: scale(20),
-        paddingTop: 150,
+        paddingTop: 200,
         alignItems: "center",
       }}
     >

@@ -1,7 +1,7 @@
-import login from "../Account/Login.js";
+
 import { file_input, File_Detection } from "./request.js";  
 import path from "path";
-import { hashMd5, hashSha1, hashSha256 } from "./HashFile/hash_al.js";
+import { hashMd5, hashSha1, hashSha256 } from "../HashFile/hash_al.js";
 
 async function inputfiles(ask) {
   const loginResult = await login(ask);

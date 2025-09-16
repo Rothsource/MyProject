@@ -15,7 +15,8 @@ import {
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
-import { usersInfo, updateUserInfo } from "./userInfo"; // Import updateUserInfo function
+import { usersInfo, updateUserInfo } from "./userInfo"; 
+import { getAccessToken, clearAllTokens } from "../TokensStorage/storeTokens"; 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -39,6 +40,8 @@ export default function Menu({ isOpen, toggleDrawer }) {
     pic_url: "",
   });
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   async function loadUser() {
     const user = await usersInfo(); // await the async function
     // console.log("User name:", user.name);
@@ -46,6 +49,58 @@ export default function Menu({ isOpen, toggleDrawer }) {
     // console.log("User pic:", user.pic_url);
     setUser(user);
   }
+
+  // Check if user is logged in (has valid JWT token)
+  async function checkLoginStatus() {
+    try {
+      const token = await getAccessToken();
+      setIsLoggedIn(!!token); // Convert to boolean
+    } catch (error) {
+      console.error("Error checking login status:", error);
+      setIsLoggedIn(false);
+    }
+  }
+
+  // Handle logout
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllTokens(); // Clear all stored tokens
+              setIsLoggedIn(false);
+              
+              // Reset user state to default values
+              setUser({
+                name: "",
+                phone_number: "",
+                pic_url: "",
+              });
+
+              Alert.alert("Success", "You have been logged out successfully");
+              toggleDrawer(); // Close the menu after logout
+              
+              // Optionally navigate to login screen
+              // router.push("/Login");
+            } catch (error) {
+              console.error("Logout error:", error);
+              Alert.alert("Error", "Failed to logout. Please try again.");
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   // Update user info function
   const updateProfile = async (newName, newPicUrl) => {
@@ -96,16 +151,31 @@ export default function Menu({ isOpen, toggleDrawer }) {
   const handlePremium = () => router.push("/Premuim");
 
   const handleAccountPress = () => {
-    Alert.alert(
-      "Account",
-      "Choose an option",
-      [
-        { text: "Login", onPress: handleLogin },
-        { text: "Signup", onPress: handleSignup },
-        { text: "Cancel", style: "cancel" },
-      ],
-      { cancelable: true }
-    );
+    if (isLoggedIn) {
+      // If logged in, show account management options
+      Alert.alert(
+        "Account",
+        "Manage your account",
+        [
+          { text: "View Profile", onPress: () => console.log("View Profile") },
+          { text: "Settings", onPress: () => console.log("Account Settings") },
+          { text: "Cancel", style: "cancel" },
+        ],
+        { cancelable: true }
+      );
+    } else {
+      // If not logged in, show login/signup options
+      Alert.alert(
+        "Account",
+        "Choose an option",
+        [
+          { text: "Login", onPress: handleLogin },
+          { text: "Signup", onPress: handleSignup },
+          { text: "Cancel", style: "cancel" },
+        ],
+        { cancelable: true }
+      );
+    }
   };
 
   // 🔥 Open File Picker
@@ -145,12 +215,14 @@ export default function Menu({ isOpen, toggleDrawer }) {
 
   useEffect(() => {
       loadUser();
+      checkLoginStatus(); // Check login status on component mount
   }, []);
 
   // Add effect to reload user data when the menu opens (optional - for real-time updates)
   useEffect(() => {
     if (isOpen) {
       loadUser(); // Refresh user data when menu opens
+      checkLoginStatus(); // Check login status when menu opens
       
       Animated.parallel([
         Animated.timing(drawerAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
@@ -205,7 +277,7 @@ export default function Menu({ isOpen, toggleDrawer }) {
     {
       title: "Account",
       icon: "👤",
-      subtitle: "Signup or Login",
+      subtitle: isLoggedIn ? "Manage account" : "Signup or Login",
       onPress: handleAccountPress,
     },
   ];
@@ -269,10 +341,10 @@ export default function Menu({ isOpen, toggleDrawer }) {
               }}
             />
             <Text style={{ color: "#fff", fontSize: moderateScale(18), fontWeight: "bold", marginTop: verticalScale(15) }}>
-              {user.name} {/* Use user.name directly for automatic updates */}
+              {user.name || "Guest"} {/* Use user.name directly for automatic updates */}
             </Text>
             <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: moderateScale(14), marginTop: verticalScale(5) }}>
-              {isPremium}
+              {isLoggedIn ? isPremium : "Not logged in"}
             </Text>
           </View>
 
@@ -333,6 +405,52 @@ export default function Menu({ isOpen, toggleDrawer }) {
                 </TouchableOpacity>
               </Animated.View>
             ))}
+
+            {/* Logout Button - Only show if user is logged in */}
+            {isLoggedIn && (
+              <Animated.View
+                style={{
+                  transform: [
+                    {
+                      translateX: menuItemsAnim.interpolate({ inputRange: [0, 1], outputRange: [-50, 0] }),
+                    },
+                  ],
+                  opacity: menuItemsAnim,
+                  marginTop: verticalScale(20),
+                }}
+              >
+                {/* Divider before logout */}
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    marginHorizontal: scale(20),
+                    marginBottom: verticalScale(10),
+                  }}
+                />
+                
+                <TouchableOpacity
+                  onPress={handleLogout}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: scale(15),
+                    marginHorizontal: scale(15),
+                    marginVertical: verticalScale(5),
+                    
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: moderateScale(18), marginRight: scale(15) }}>🚪</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: "#ff6b6b", fontSize: moderateScale(16), fontWeight: "500" }}>Logout</Text>
+                    <Text style={{ color: "rgba(255,107,107,0.7)", fontSize: moderateScale(12), marginTop: verticalScale(2) }}>
+                      Sign out of your account
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
           </ScrollView>
         </View>
       </Animated.View>

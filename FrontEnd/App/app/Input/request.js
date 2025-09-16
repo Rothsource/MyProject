@@ -1,9 +1,9 @@
-import { getAccessToken} from "../TokensStorage/storeTokens.js";
-const token = await getAccessToken();
-if (!token) throw new Error("No access token found.");
+import { getAccessToken } from "../../TokensStorage/storeTokens";
+const Network = "http://10.0.2.2:5000";
 
-export async function link_input(links, hash, id) {
-  const res = await fetch("http://127.0.0.1:5000/input/links", {
+export async function link_input(links, hash) {
+  const token = await getAccessToken();
+  const res = await fetch(`${Network}/input/links`, {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
@@ -11,23 +11,23 @@ export async function link_input(links, hash, id) {
     },
     body: JSON.stringify({
       links,
-      hash,
-      id
+      hash
     }),
   });
   return res.json();
 }
 
-export async function url_detection(hash, userid,inputId) {
+export async function url_detection(hash,inputId) {
+  const token = await getAccessToken();
   try {    
-    const res = await fetch("http://127.0.0.1:5000/detect/url", {
+    const res = await fetch(`${Network}/detect/url`, {
       method: "POST",
       headers: { 
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({
         hash,
-        userid,
         inputId
       })
     });
@@ -46,10 +46,14 @@ export async function url_detection(hash, userid,inputId) {
 
 
 export async function file_input(name, userid, hash_md5, hash_sha1, hash_sha256, size = 0) {
+  const token = await getAccessToken();
   try {
-    const res = await fetch("http://127.0.0.1:5000/input/files", {
+    const res = await fetch("http://10.0.2.2:5000/input/files", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+       },
       body: JSON.stringify({ name, size, userid, hash_md5, hash_sha1, hash_sha256 })
     });
     return res.json(); 
@@ -61,10 +65,14 @@ export async function file_input(name, userid, hash_md5, hash_sha1, hash_sha256,
 
 
 export async function File_Detection(file_input_id, userid, hash_md5, hash_sha1, hash_sha256) {
+  const token = await getAccessToken();
   try {
     const res = await fetch("http://127.0.0.1:5000/detect/file", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
       body: JSON.stringify({ file_input_id, userid, md5: hash_md5, sha1: hash_sha1, sha256: hash_sha256 })
     });
     return res.json(); 
@@ -75,37 +83,47 @@ export async function File_Detection(file_input_id, userid, hash_md5, hash_sha1,
 }
 
 
-export async function hash_input(hash, userid) {
+export async function hash_input(hash) {
+  const token = await getAccessToken();
   try {
-    const res = await fetch("http://127.0.0.1:5000/input/hash", {
+    const res = await fetch(`${Network}/input/hash`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({
-        hash,
-        UserId: userid 
+        hash
       }),
     }); 
 
-    return res.json();
+    const data = await res.json();
+    console.log("Here hash input reqest to backend respnose: ", data);
+    return data;
   } catch (error) {
     console.error('Hash input request failed:', error);
     throw error;
   }
 }
 
-export async function Hash_Detection(hash, userid, inputid) {
+export async function Hash_Detection(hash,inputid) {
+  const token = await getAccessToken();
   try {    
-    const res = await fetch("http://127.0.0.1:5000/detect/hash", {
+    const res = await fetch(`${Network}/detect/hash`, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({
         hash,
-        userid,
         inputid
     })
   });
-
-  return res.json();
+ 
+  const data = await res.json();
+  console.log("Data: ", data);
+  return data;
   } catch (error) {
     console.error('Hash detection request failed:', error);
     throw error;

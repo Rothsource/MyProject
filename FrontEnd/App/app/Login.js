@@ -21,12 +21,6 @@ const verticalScale = (size) => (SCREEN_HEIGHT / BASE_HEIGHT) * size;
 const moderateScale = (size, factor = 0.5) =>
   size + (scale(size) - size) * factor;
 
-if (loginFunctions.userid){
-  console.log("Available id");
-}else{
-  console.log("No user id!");
-}
-
 export default function Login() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");

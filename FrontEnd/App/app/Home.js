@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState} from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -39,26 +39,28 @@ export default function Home() {
     pic_url: "",
   });
 
-  async function loadUser() {
-    const user = await usersInfo(); // await the async function
-    // console.log("User name:", user.name);
-    // console.log("User phone:", user.phone_number);
-    // console.log("User pic:", user.pic_url);
-    setUser(user);
-  }
-  const searchInputRef = useRef(null);
-  const { focusSearch, timestamp } = useLocalSearchParams(); 
+  const [profileImage, setProfileImage] = useState(null);
 
-  // Default profile data
-  const defaultProfileImage = user.pic_url;
-  const defaultName = user.name;
-
-  // local state for profile image
-  const [profileImage, setProfileImage] = useState(defaultProfileImage);
+  // Premium modal state
   const [showAd, setShowAd] = useState(false);
-  const [adDismissed, setAdDismissed] = useState(false);
+  const [firstTime, setFirstTime] = useState(true);
+  const adTimerRef = useRef(null);
 
-  // Function to pick image
+  const searchInputRef = useRef(null);
+  const { focusSearch, timestamp } = useLocalSearchParams();
+
+  // Load user info
+  async function loadUser() {
+    const userData = await usersInfo();
+    setUser(userData);
+    setProfileImage(userData.pic_url);
+  }
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  // Show alert before picking image
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -75,11 +77,10 @@ export default function Home() {
 
     if (!result.canceled) {
       const newImage = { uri: result.assets[0].uri };
-      setProfileImage(newImage);
+      setProfileImage(newImage.uri);
     }
   };
 
-  // Show alert before picking image
   const showPickAlert = () => {
     Alert.alert(
       'Change Profile Picture',
@@ -92,10 +93,6 @@ export default function Home() {
     );
   };
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
   // Autofocus search
   useEffect(() => {
     if (focusSearch === "true") {
@@ -105,18 +102,33 @@ export default function Home() {
     }
   }, [focusSearch, timestamp]);
 
-  // Show premium modal after delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!adDismissed) setShowAd(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [adDismissed]);
-
+  // Function to close ad
   const closeAd = () => {
     setShowAd(false);
-    setAdDismissed(true); 
   };
+
+  // Schedule ad popup
+  const scheduleAd = (delayMs) => {
+    if (adTimerRef.current) clearTimeout(adTimerRef.current);
+
+    adTimerRef.current = setTimeout(() => {
+      setShowAd(true);
+    }, delayMs);
+  };
+
+  // Run popup logic
+  useEffect(() => {
+    if (firstTime) {
+      scheduleAd(5000); // 5 seconds first time
+      setFirstTime(false);
+    } else {
+      scheduleAd(2 * 60 * 1000); // 2 minutes next visits
+    }
+
+    return () => {
+      if (adTimerRef.current) clearTimeout(adTimerRef.current);
+    };
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#1E4368' }}>
@@ -163,7 +175,7 @@ export default function Home() {
       >
         <TouchableOpacity onPress={showPickAlert}>
           <Image
-            source={{ uri: defaultProfileImage }}
+            source={{ uri: profileImage }}
             style={{
               width: scale(150),
               height: scale(150),
@@ -174,17 +186,10 @@ export default function Home() {
           />
         </TouchableOpacity>
         <View style={{ marginLeft: 15, top: -3 }}>
-          <Text style={{ 
-            color: '#fff',
-            fontSize: moderateScale(25) 
-          }}>
-            Hello, {defaultName}!
+          <Text style={{ color: '#fff', fontSize: moderateScale(25) }}>
+            Hello, {user.name}!
           </Text>
-          <Text style={{ 
-            top: 5, 
-            color: '#ccc', 
-            fontSize: moderateScale(15) 
-          }}>
+          <Text style={{ top: 5, color: '#ccc', fontSize: moderateScale(15) }}>
             Welcome to KHAAROT
           </Text>
         </View>
