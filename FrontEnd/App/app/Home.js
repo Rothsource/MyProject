@@ -20,6 +20,7 @@ import FileDetection from './FileDetection';
 import LinkDetection from './LinkDetection';
 import PremiumPlans from './Advertise';
 import { usersInfo } from './userInfo';
+import ChangeProfile from './ChangeProfile';
 
 // Screen dimensions for scaling
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -43,6 +44,7 @@ export default function Home() {
 
   // Premium modal state
   const [showAd, setShowAd] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [firstTime, setFirstTime] = useState(true);
   const adTimerRef = useRef(null);
 
@@ -82,15 +84,7 @@ export default function Home() {
   };
 
   const showPickAlert = () => {
-    Alert.alert(
-      'Change Profile Picture',
-      'Do you want to choose a new profile picture?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Choose Image', onPress: pickImage },
-      ],
-      { cancelable: true }
-    );
+    setShowProfileModal(true);
   };
 
   // Autofocus search
@@ -162,6 +156,15 @@ export default function Home() {
           </View>
         </View>
       </Modal>
+      <ChangeProfile 
+        visible={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={user}
+        onUpdateSuccess={() => {
+          loadUser();
+          setProfileImage(user.pic_url); // Update profile image
+        }}
+      />
 
       {/* Profile Section */}
       <View

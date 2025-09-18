@@ -20,6 +20,33 @@ export async function userInfo() {
   }
 }
 
+export async function userUpdate({ name = null, password = null, picUrl = null, phone = null }) {
+  try {
+    const token = await getAccessToken();
+
+    const body = {};
+    if (name) body.name = name;
+    if (password) body.password = password;
+    if (picUrl) body.pic = picUrl;   
+    if (phone) body.phone_number = phone;
+
+    const res = await fetch("http://10.0.2.2:5000/users/update", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    return res.json();
+  } catch (error) {
+    console.error("Request error:", error);
+    throw error;
+  }
+}
+
+
 export async function checkPhonenumber(phone) {
   try {
     

@@ -17,6 +17,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
 import { usersInfo, updateUserInfo } from "./userInfo"; 
 import { getAccessToken, clearAllTokens } from "../TokensStorage/storeTokens"; 
+import { handleFeedback } from "./userFeedback/Feedback";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -31,6 +32,20 @@ const moderateScale = (size, factor = 0.5) => size + (scale(size) - size) * fact
 const MENU_WIDTH = SCREEN_WIDTH * 0.45;
 const MENU_HEIGHT = SCREEN_HEIGHT + 100;
 const MENU_TOP_OFFSET = verticalScale(0);
+
+export function fileToBase64(uri) {
+  return new Promise((resolve, reject) => {
+    fetch(uri)
+      .then(response => response.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      })
+      .catch(reject);
+  });
+}
 
 export default function Menu({ isOpen, toggleDrawer }) {
 
@@ -150,6 +165,8 @@ export default function Menu({ isOpen, toggleDrawer }) {
   const handleSignup = () => router.push("/Signup");
   const handlePremium = () => router.push("/Premuim");
 
+
+
   const handleAccountPress = () => {
     if (isLoggedIn) {
       // If logged in, show account management options
@@ -185,32 +202,93 @@ export default function Menu({ isOpen, toggleDrawer }) {
         type: "*/*",
         copyToCacheDirectory: true,
       });
-      if (result.type === "success") {
-        setSelectedFile(result);
-        Alert.alert("File Selected", result.name);
+      
+      console.log("File picker result:", result); // Debug log
+      
+      // Handle different response formats
+      if (!result.canceled) {
+        // For newer versions of expo-document-picker
+        const fileInfo = result.assets ? result.assets[0] : result;
+        
+        // Check file size (limit to 5MB = 5 * 1024 * 1024 bytes)
+        const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+        if (fileInfo.size && fileInfo.size > maxSizeInBytes) {
+          Alert.alert(
+            "File Too Large", 
+            `File size is ${(fileInfo.size / 1024 / 1024).toFixed(1)}MB. Please select a file smaller than 5MB.`
+          );
+          return;
+        }
+        
+        // Convert to base64
+        const base64 = await fileToBase64(fileInfo.uri);
+        
+        setSelectedFile({
+          name: fileInfo.name,
+          uri: fileInfo.uri,
+          size: fileInfo.size,
+          mimeType: fileInfo.mimeType || fileInfo.type,
+          base64: base64
+        });
+        
+        console.log("File selected:", fileInfo.name); // Debug log
+        Alert.alert("File Selected", `${fileInfo.name} has been uploaded`);
       }
     } catch (error) {
+      console.error("File picker error:", error);
       Alert.alert("Error", "Unable to pick file.");
     }
   };
 
-  // 🔥 Handle Feedback Submit
-  const handleSubmitFeedback = () => {
+  // Handle Feedback Submit
+  const handleSubmitFeedback = async () => {
     if (!feedbackText.trim() && !feedbackUrl.trim() && !selectedFile) {
       Alert.alert("Error", "Please provide feedback, a URL, or a file.");
       return;
     }
 
-    console.log("Feedback:", feedbackText);
-    console.log("URL:", feedbackUrl);
-    console.log("File:", selectedFile);
+    try {
+      console.log("Submitting feedback with data:", {
+        text: feedbackText,
+        url: feedbackUrl,
+        file: selectedFile ? {
+          name: selectedFile.name,
+          type: selectedFile.mimeType,
+          size: selectedFile.size
+        } : null
+      });
 
-    // 🔥 Here you can send this data to your backend for analysis
-    Alert.alert("Submitted", "Thank you for your feedback!");
-    setFeedbackText("");
-    setFeedbackUrl("");
-    setSelectedFile(null);
-    setShowFeedback(false);
+      const response = await handleFeedback({
+        text: feedbackText,
+        url: feedbackUrl,
+        file: selectedFile ? {
+          name: selectedFile.name,
+          type: selectedFile.mimeType,
+          base64: selectedFile.base64
+        } : null, 
+      });
+
+      Alert.alert("Submitted", "Thank you for your feedback!");
+      setFeedbackText("");
+      setFeedbackUrl("");
+      setSelectedFile(null);
+      setShowFeedback(false);
+
+      console.log("Feedback response:", response);
+    } catch (err) {
+      console.error("Feedback submission error:", err);
+      
+      // More detailed error logging
+      if (err.response) {
+        console.log("Error response status:", err.response.status);
+        console.log("Error response data:", err.response.data);
+      }
+      
+      Alert.alert(
+        "Error", 
+        `Failed to submit feedback: ${err.message || 'Unknown error'}`
+      );
+    }
   };
 
   useEffect(() => {
@@ -476,8 +554,46 @@ export default function Menu({ isOpen, toggleDrawer }) {
               style={{ borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 10, marginBottom: 10 }}
             />
 
+            {/* File Name Display Box */}
+            {selectedFile && (
+              <View style={{ 
+                borderWidth: 1, 
+                borderColor: "#4CAF50", 
+                borderRadius: 10, 
+                padding: 15, 
+                marginBottom: 10, 
+                backgroundColor: "#f0f8f0",
+                flexDirection: "row", 
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "bold", color: "#2E7D32" }}>📎 {selectedFile.name}</Text>
+                  <Text style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                    {selectedFile.size ? `${(selectedFile.size / 1024).toFixed(1)} KB` : 'File uploaded'}
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setSelectedFile(null);
+                    Alert.alert("File Removed", "File has been removed");
+                  }} 
+                  style={{ 
+                    backgroundColor: "#ff6b6b", 
+                    borderRadius: 15, 
+                    width: 25, 
+                    height: 25, 
+                    justifyContent: "center", 
+                    alignItems: "center" 
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <TouchableOpacity onPress={pickFile} style={{ backgroundColor: "#2A568A", padding: 10, borderRadius: 10, marginBottom: 10 }}>
-              <Text style={{ color: "#fff", textAlign: "center" }}>{selectedFile ? selectedFile.name : "Upload File"}</Text>
+              <Text style={{ color: "#fff", textAlign: "center" }}>📎 Upload File</Text>
             </TouchableOpacity>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
