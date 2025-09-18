@@ -16,7 +16,7 @@ const FileSHA256 = sequelize.define("FileSHA256", {
     type: DataTypes.ENUM("Bad"),
     allowNull: false,
   },
-  put_at5: { // column typo in DB schema, keep same for compatibility
+  put_at5: { 
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },

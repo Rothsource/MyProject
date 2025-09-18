@@ -11,6 +11,7 @@ import {
   verifyotp,
   clearOTP,
   checkPhone,
+  updateUser,
 } from "../controller/User.js";
 
 import { verifyToken } from '../Jwt/midware/middleware.js';
@@ -18,6 +19,8 @@ import { verifyToken } from '../Jwt/midware/middleware.js';
 const router = express.Router();
 
 router.get("/", verifyToken, getUser);
+
+router.patch("/update", verifyToken, updateUser);
 
 
 router.post("/signup", PostUsers);

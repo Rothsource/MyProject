@@ -78,6 +78,59 @@ export const getUser = async (req, res) => {
   }
 };
 
+// update users
+export const updateUser = async (req, res) => {
+  try {
+    const userId = req.user.sub; // from JWT
+    const { name, phone_number, password, pic } = req.body;
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (name) {
+      user.User_Name = name;
+    }
+
+    if (phone_number) {
+      const existingPhone = await User.findOne({ where: { User_PhoneNumber: phone_number } });
+      if (existingPhone && existingPhone.User_id !== userId) {
+        return res.status(400).json({ error: "Phone number already in use" });
+      }
+      user.User_PhoneNumber = phone_number;
+    }
+
+    if (password) {
+      const salt = crypto.randomBytes(16).toString("hex");
+      const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, `sha512`).toString(`hex`);
+      user.User_Password = hash;
+      user.Salt = salt;
+    }
+
+    if (pic) {
+      const picURL = await uploadImage(pic);
+      user.pic_url = picURL;
+    }
+    user.update_time = new Date();
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user: {
+        name: user.User_Name,
+        phone_number: user.User_PhoneNumber,
+        picUrl: user.pic_url,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json({ error: "Failed to update user" });
+  }
+};
+
+
 
 // create new user endpoint
 export const checkPhone = async (req, res) => {

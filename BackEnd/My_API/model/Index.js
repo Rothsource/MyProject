@@ -10,6 +10,7 @@ import FileSHA256 from "./File/SHA256.js";
 import DetectFile from "./File/DetectFile.js";
 import HashDetection from "./Hash/HashDetection.js";
 import HashInput from "./Hash/HashInput.js";
+import Feedback from "./UserFeedback.js/FeedBack.js";
 
 //Links
 DetectLink.belongsTo(MaliciousLink, { foreignKey: "links_id" });
@@ -43,6 +44,11 @@ HashInput.hasMany(HashDetection, { foreignKey: "Hash_Input_Id"});
 HashDetection.belongsTo(User, { foreignKey: "Input_by_UserId",  targetKey: "User_id" });
 User.hasMany(HashDetection, { foreignKey: "Input_by_UserId"});
 
+//User Feedback
+User.hasMany(Feedback, { foreignKey: "User_Id" });
+Feedback.belongsTo(User, { foreignKey: "User_Id" });
+
+
 
 export {
   User,
@@ -56,4 +62,5 @@ export {
   DetectFile,
   HashDetection,
   HashInput,
+  Feedback,
 };

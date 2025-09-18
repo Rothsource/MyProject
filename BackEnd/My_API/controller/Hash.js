@@ -62,30 +62,30 @@ export const createHash = async (req, res) => {
  */
 export const detectHash = async (req, res) => {
   try {
+    let label = "Unknow";
     const { hash, inputid } = req.body;
     const userid = req.user.sub;
 
     if (!hash || !userid || !inputid) {
       return res.status(400).json({ error: "Hash, User ID, and Input ID are required" });
     }
-
-    let label = "Good";
     console.log(`${hash}`);
 
     if (hash.length === 32) {
       const record = await FileMD5.findOne({ where: { md5: hash } });
       if (record?.is_bad === "Bad") label = "Bad";
+      await recordDetection(inputid, label, userid);
     } else if (hash.length === 40) {
       const record = await FileSHA1.findOne({ where: { sha1: hash } });
       if (record?.is_bad === "Bad") label = "Bad";
+      await recordDetection(inputid, label, userid);
     } else if (hash.length === 64) {
       const record = await FileSHA256.findOne({ where: { sha256: hash } });
       if (record?.is_bad === "Bad") label = "Bad";
+      await recordDetection(inputid, label, userid);
     } else {
-      label = "Not MD5, SHA1, and SHA256";
+      label = "Uknown";
     }
-
-    await recordDetection(inputid, label, userid);
 
     return res.json({ label });
   } catch (error) {
@@ -94,27 +94,3 @@ export const detectHash = async (req, res) => {
   }
 };
 
-/**
- * Standalone function for detecting hash without Express
- */
-export const detectHashStandalone = async ({ hash, userid, inputid }) => {
-  if (!hash || !userid || !inputid) throw new Error("Missing parameters");
-
-  let label = "Good";
-
-  if (hash.length === 32) {
-    const record = await FileMD5.findOne({ where: { md5: hash } });
-    if (record?.is_bad === "Bad") label = "Bad";
-  } else if (hash.length === 40) {
-    const record = await FileSHA1.findOne({ where: { sha1: hash } });
-    if (record?.is_bad === "Bad") label = "Bad";
-  } else if (hash.length === 64) {
-    const record = await FileSHA256.findOne({ where: { sha256: hash } });
-    if (record?.is_bad === "Bad") label = "Bad";
-  } else {
-    throw new Error("Invalid hash length");
-  }
-
-  await recordDetection(inputid, label, userid);
-  return label;
-};

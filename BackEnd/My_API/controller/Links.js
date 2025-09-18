@@ -50,23 +50,24 @@ export const createLink = async (req, res) => {
 
 export const detectLink = async (req, res) => {
   try {
+    let label = 'Good';
     const { hash, inputId } = req.body;
 
     if (!hash) {
-      return res.status(400).json({ error: 'Hash is required!' });
+      return res.status(400).json({ error: 'Link is required!' });
     }
     const userid = req.user.sub;
     const maliciousLink = await MaliciousLink.findOne({
       where: { hahs_256: hash },
     });
-
-    let label = 'Good';
+    
 
     if (maliciousLink && maliciousLink.is_bad === 'Bad') {
       label = 'Bad';
+      await record_Detection(maliciousLink?.id || null, label, userid, inputId);
+    }else{
+      label = "Unknow";
     }
-
-    await record_Detection(maliciousLink?.id || null, label, userid, inputId);
 
     return res.json({ label });
   } catch (error) {
