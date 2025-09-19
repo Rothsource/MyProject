@@ -16,6 +16,9 @@ app.use("/input", Inputlinks);
 app.use('/detect', detect);
 app.use('/feedback', userFeedback);
 
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

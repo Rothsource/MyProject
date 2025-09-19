@@ -18,8 +18,12 @@ export const writeFeedBack = async (req, res) => {
   try {
     const { text, url, file} = req.body;
 
-
-    const userid = req.user.sub;
+    if(file){
+      console.log("File reach Backend");
+    }else{
+      console.log("File Not");
+    }
+    const userid = req.user.sub; 
     let fileUrl = null;
     if (file) {
       fileUrl = await uploadFile(file);
